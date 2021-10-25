@@ -1,0 +1,142 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace WiredBrainCoffeeSurveys.Reports
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Please specify a report to run (rewards, comments and tasks):");
+            var selectedReport = Console.ReadLine();
+            switch (selectedReport)
+            {
+                case "rewards":
+                    GenerateWinnerEmails();
+                    break;
+                case "comments":
+                    GenerateCommentsReport();
+                    break;
+                case "tasks":
+                    GenerateTasksReport();
+                    break;
+                default:
+                    Console.WriteLine("Sorry, that's not a valid option.");
+                    break;
+            }
+           
+        }
+
+        private static void GenerateWinnerEmails()
+        {
+            var selectedEmails = new List<string>();
+            int counter = 0;
+
+            Console.WriteLine(Environment.NewLine + "Selected Winners Output:");
+            while (selectedEmails.Count < 2 && counter < Q1Results.Responses.Count)
+            {
+                var currentItem = Q1Results.Responses[counter];
+
+                if (currentItem.FavoriteProduct == Q1Results.FavoriteProduct)
+                {
+                    selectedEmails.Add(currentItem.EmailAddress);
+                    Console.WriteLine(currentItem.EmailAddress);
+                }
+
+                counter++;
+            }
+
+            File.WriteAllLines("WinnersReport.csv", selectedEmails);
+        }
+
+        private static void GenerateCommentsReport()
+        {
+            var comments = new List<string>();
+            Console.WriteLine(Environment.NewLine + "Comments Output");
+            for (var i = 0; i < Q1Results.Responses.Count; i++)
+            {
+                var currentresponse = Q1Results.Responses[i];
+                if (currentresponse.WouldRecommend < 7.0)
+                {
+                    Console.WriteLine(currentresponse.Comments);
+                    comments.Add(currentresponse.Comments);
+                }
+            }
+
+            foreach (var response in Q1Results.Responses)
+            {
+                if (response.AreaToImprove == Q1Results.AreaToImprove)
+                {
+                    Console.WriteLine(response.Comments);
+                    comments.Add(response.Comments);
+                }
+            }
+
+            File.WriteAllLines("CommentsReport.csv", comments);
+        }
+
+        public static void GenerateTasksReport()
+        {
+            var tasks = new List<string>();
+            //Calculated Values
+            double responseRate = Q1Results.NumberResponded / Q1Results.NumberSurveyed;
+            double overallScore = (Q1Results.ServiceScore + Q1Results.CoffeeScore + Q1Results.FoodScore + Q1Results.PriceScore) / 4;
+
+
+            if (Q1Results.CoffeeScore < Q1Results.FoodScore)
+            {
+                tasks.Add("Investigate coffee recipes and ingredients");
+            }
+
+            if (overallScore > 8.0)
+            {
+                tasks.Add("Work with leadership to reward staff.");
+            }
+            else
+            {
+                tasks.Add("Work with employees for improvement ideas.");
+            }
+
+            if (responseRate < .33)
+            {
+                tasks.Add("Research options to improve response rate.");
+            }
+            else if (responseRate > .33 && responseRate < .66)
+            {
+                tasks.Add("Reward participants with free coffee coupon.");
+            }
+            else
+            {
+                tasks.Add("Rewards participants with discount coffee coupon.");
+            }
+
+            switch (Q1Results.AreaToImprove)
+            {
+                case "RewardsProgram":
+                    tasks.Add("Revisit the rewards deals.");
+                    break;
+
+                case "Cleanlines":
+                    tasks.Add("Contact the cleanning vendor.");
+                    break;
+
+                case "MobileApp":
+                    tasks.Add("Contact consulting firm about app.");
+                    break;
+
+                default:
+                    tasks.Add("Investigate individual commentts for ideas.");
+                    break;
+            }
+
+            Console.WriteLine(Environment.NewLine + "Tasks Output:");
+            foreach (var task in tasks)
+            {
+                Console.WriteLine(tasks);
+            }
+
+            File.WriteAllLines("TasksReport.csv", tasks);
+        }
+    }
+}
